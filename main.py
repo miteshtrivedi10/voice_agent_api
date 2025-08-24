@@ -63,6 +63,11 @@ async def create_voice_session(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/healthz")
+async def health_check():
+    return {"status": "healthy"}
+
+
 @app.post("/upload-files")
 async def upload_files(
     file: UploadFile, user_id: str = Form(...), subject_name: str = Form(...)
