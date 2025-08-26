@@ -14,4 +14,9 @@ dependencies = [
     "livekit-plugins-noise-cancellation>=0.2.5",
     "tavily-python>=0.7.10",
     "python-multipart>=0.0.20",
+    "loguru>=0.7.3",
+    "supabase>=2.18.1",
+    "sqlalchemy>=2.0.43",
+    "pytest>=8.4.1",
+    "httpx>=0.28.1",
 ]

@@ -20,6 +20,16 @@ class LlmMetricCollectorDto(BaseModel):
     timestamp: float
 
 
+class UserVoiceSessions(BaseModel):
+    id: str
+    user_id: str
+    session_id: str
+    room_name: str
+    duration: int
+    start_time: str
+    end_time: str
+
+
 class TtsMetricCollectorDto(BaseModel):
     user_id: str
     session_id: str
@@ -31,3 +41,25 @@ class TtsMetricCollectorDto(BaseModel):
     characters_count: int
     duration: float
     timestamp: float
+
+
+class FileDetails(BaseModel):
+    user_id: str
+    file_id: str
+    file_name: str
+    subject: str
+    file_size: int
+    file_type: str
+    is_processed: bool
+    total_generated_qna: int = 0
+    upload_timestamp: str
+    processed_timestamp: str
+
+
+class QuestionAndAnswers(BaseModel):
+    question_id: str
+    user_id: str
+    file_id: str
+    question: str
+    answer: str
+    timestamp: str
