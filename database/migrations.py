@@ -1,6 +1,5 @@
 """Database migration scripts for creating tables if they don't exist."""
 from loguru import logger
-from database.supabase_client import get_supabase_client
 
 
 def create_user_voice_sessions_table():
@@ -18,14 +17,22 @@ def create_file_details_table():
     logger.info("File details table creation check completed")
     return True
 
+def create_question_and_answers_table():
+    """Create question_and_answers table if it doesn't exist."""
+    # Tables are now created using Supabase MCP tools
+    # This function is kept for backward compatibility
+    logger.info("Question and answers table creation check completed")
+    return True
+
 
 def initialize_database():
     """Initialize database tables."""
     logger.info("Initializing database tables...")
     success1 = create_user_voice_sessions_table()
     success2 = create_file_details_table()
+    success3 = create_question_and_answers_table()
     
-    if success1 and success2:
+    if success1 and success2 and success3:
         logger.info("Database initialization completed successfully")
         return True
     else:

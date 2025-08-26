@@ -63,3 +63,25 @@ class QuestionAndAnswers(BaseModel):
     question: str
     answer: str
     timestamp: str
+
+
+class GenerateEmbeddingRequest(BaseModel):
+    user_id: str
+    absolute_filepath: str
+    subject: str
+    file_id: str
+
+
+class QuestionAnswerPair(BaseModel):
+    question: str
+    answer: str
+
+
+class GenerateEmbeddingResponse(BaseModel):
+    status: str
+    message: str
+    collection_name: str
+    file_id: str
+    chunks_added: int = 0
+    total_generated_qna: int = 0
+    question_and_answers: list[QuestionAnswerPair] = []
