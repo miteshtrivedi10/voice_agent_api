@@ -1,12 +1,13 @@
 from dotenv import load_dotenv
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from fastapi.security import HTTPBearer
 from starlette.middleware.cors import CORSMiddleware
 from loguru import logger
 import os
 import sys
 
-from api import router
+from logic.api import router
 
 app = FastAPI(title="Voice Tutor Agent API")
 
@@ -22,11 +23,11 @@ logger.info("Application starting...")
 
 _ = load_dotenv(override=True)
 
-# Include API router
+# Include API router with authentication
 app.include_router(router)
 
 
-# Health check endpoint
+# Health check endpoint (no authentication required)
 @app.get("/healthz")
 async def health_check():
     logger.info("Health check endpoint called")

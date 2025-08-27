@@ -8,6 +8,7 @@ A FastAPI-based API for handling voice sessions and file uploads with Supabase i
 - PDF file upload with validation
 - Asynchronous logging with Loguru
 - Supabase database integration
+- Supabase JWT token authentication
 - Comprehensive error handling
 
 ## Setup
@@ -31,11 +32,20 @@ A FastAPI-based API for handling voice sessions and file uploads with Supabase i
    python main.py
    ```
 
+## Authentication
+
+All API endpoints (except `/healthz`) require a valid Supabase JWT token in the Authorization header:
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+The token is validated against Supabase's JWKS endpoint. Invalid or expired tokens will result in a 401 Unauthorized response.
+
 ## API Endpoints
 
-- `POST /voice` - Create a new voice session
-- `POST /upload-files` - Upload a PDF file
-- `GET /healthz` - Health check endpoint
+- `POST /voice` - Create a new voice session (requires authentication)
+- `POST /upload-files` - Upload a PDF file (requires authentication)
+- `GET /healthz` - Health check endpoint (no authentication required)
 
 ## Database
 
