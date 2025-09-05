@@ -15,8 +15,3 @@ class FileDetailsDB(FileDetails):
 class QuestionAndAnswersDB(QuestionAndAnswers):
     """Database model for question and answers."""
     pass
-
-
-class FileDetailsDB(FileDetails):
-    """Database model for file details."""
-    pass

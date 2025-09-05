@@ -75,6 +75,40 @@ async def create_file_details(file_data: FileDetailsDB) -> bool:
             logger.error(f"Error creating file details: {e}")
         return False
 
+async def update_file_details(file_data: FileDetailsDB) -> bool:
+    """
+    Asynchronously update a file details record in Supabase.
+    
+    Args:
+        file_data: FileDetailsDB object containing updated file data
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        supabase_client = get_supabase_client()
+        if not supabase_client:
+            logger.error("Supabase client not initialized")
+            return False
+            
+        # Convert Pydantic model to dict
+        file_dict = file_data.model_dump()
+        
+        # Update in Supabase using file_id as the primary key
+        response = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: supabase_client.table("file_details").update(file_dict).eq("file_id", file_data.file_id).execute()
+        )
+        
+        logger.info(f"File details updated for user_id: {file_data.user_id}, file_id: {file_data.file_id}")
+        return True
+    except Exception as e:
+        if "PGRST205" in str(e):
+            logger.error(f"Table 'file_details' does not exist in the database. Please create it through the Supabase dashboard. Error: {e}")
+        else:
+            logger.error(f"Error updating file details: {e}")
+        return False
+
 async def create_question_and_answers(qna_data: QuestionAndAnswersDB) -> bool:
     """
     Asynchronously create a question and answers record in Supabase.

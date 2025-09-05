@@ -37,7 +37,8 @@ def test_file_details_creation():
         is_processed=False,
         total_generated_qna=0,
         upload_timestamp="2023-01-01 12:00:00",
-        processed_timestamp="2023-01-01 12:00:00"
+        processed_timestamp="2023-01-01 12:00:00",
+        user_name="test_username"  # Add the required user_name field
     )
     
     assert file_details.user_id == "test_user"
@@ -50,3 +51,4 @@ def test_file_details_creation():
     assert file_details.total_generated_qna == 0
     assert file_details.upload_timestamp == "2023-01-01 12:00:00"
     assert file_details.processed_timestamp == "2023-01-01 12:00:00"
+    assert file_details.user_name == "test_username"  # Verify the user_name field

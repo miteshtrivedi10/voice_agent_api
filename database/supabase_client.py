@@ -1,8 +1,10 @@
 """Supabase client configuration and initialization."""
 
-import os
 from supabase import create_client, Client
 from loguru import logger
+
+# Import settings
+from logic.config import settings
 
 
 class SupabaseClientManager:
@@ -14,13 +16,15 @@ class SupabaseClientManager:
     def get_client(self) -> Client | None:
         """Get or create the Supabase client instance."""
         if self._client is None:
-            # Supabase configuration
-            SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project-url.supabase.co")
-            SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-anon-key")
+            # Supabase configuration from settings
+            SUPABASE_URL = settings.SUPABASE_URL
+            SUPABASE_KEY = settings.SUPABASE_KEY
             
             # Check if we have valid configuration
             if SUPABASE_URL == "https://your-project-url.supabase.co" or SUPABASE_KEY == "your-anon-key":
                 logger.warning("Using default Supabase configuration. Please check your environment variables.")
+            else:
+                logger.info("Supabase configuration loaded successfully")
             
             try:
                 self._client = create_client(SUPABASE_URL, SUPABASE_KEY)

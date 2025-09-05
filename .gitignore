@@ -6,7 +6,9 @@ __pycache__/
 # C extensions
 *.so
 .serena
-uploaded_files
+# Upload directory
+uploaded_files/
+upload/
 
 
 # Distribution / packaging

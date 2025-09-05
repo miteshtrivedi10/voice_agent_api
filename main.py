@@ -8,20 +8,17 @@ import os
 import sys
 
 from logic.api import router
+from logic.config import settings
+
+_ = load_dotenv(override=True)
 
 app = FastAPI(title="Voice Tutor Agent API")
 
 # Configure loguru for console output with Uvicorn-like format
 logger.remove()
-logger.add(
-    sys.stdout,
-    level="INFO",
-    format="{level}:     {message}",
-    colorize=False
-)
+logger.add(sys.stdout, level="INFO", format="{level}:     {message}", colorize=False)
 logger.info("Application starting...")
 
-_ = load_dotenv(override=True)
 
 # Include API router with authentication
 app.include_router(router)
@@ -48,7 +45,7 @@ async def startup_event():
     """Initialize application on startup"""
     logger.info("Application started successfully")
     # Create necessary directories
-    os.makedirs("uploaded_files", exist_ok=True)
+    os.makedirs(settings.UPLOAD_DIRECTORY, exist_ok=True)
     os.makedirs("logs", exist_ok=True)
 
 

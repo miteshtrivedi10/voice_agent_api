@@ -1,19 +1,16 @@
 """Handler functions that connect API endpoints to service functions."""
 from typing import Optional
 from fastapi import UploadFile
-from model.dtos import VoiceSessionResponse
+from fastapi import UploadFile
+from model.dtos import VoiceSessionResponse, VoiceSessionParams, UploadFileParams
 from logic.service import create_voice_session_service, upload_files_service
 
 
-async def handle_voice_session_creation(
-    user_id: str, name: Optional[str] = "NA", email: Optional[str] = "NA"
-) -> VoiceSessionResponse:
+async def handle_voice_session_creation(params: VoiceSessionParams) -> VoiceSessionResponse:
     """Handle voice session creation request."""
-    return await create_voice_session_service(user_id, name, email)
+    return await create_voice_session_service(params)
 
 
-async def handle_file_upload(
-    file: UploadFile, user_id: str, subject_name: str
-):
+async def handle_file_upload(params: UploadFileParams):
     """Handle file upload request."""
-    return await upload_files_service(file, user_id, subject_name)
+    return await upload_files_service(params)

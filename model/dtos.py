@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from fastapi import UploadFile
+from typing import Optional, List
 
 
 class VoiceSessionResponse(BaseModel):
@@ -54,6 +56,7 @@ class FileDetails(BaseModel):
     total_generated_qna: int = 0
     upload_timestamp: str
     processed_timestamp: str
+    user_name: str  # Newly added field
 
 
 class QuestionAndAnswers(BaseModel):
@@ -63,6 +66,7 @@ class QuestionAndAnswers(BaseModel):
     question: str
     answer: str
     timestamp: str
+    user_name: str  # Newly added field
 
 
 class GenerateEmbeddingRequest(BaseModel):
@@ -70,11 +74,35 @@ class GenerateEmbeddingRequest(BaseModel):
     absolute_filepath: str
     subject: str
     file_id: str
+    user_name: str  # Newly added field
 
 
 class QuestionAnswerPair(BaseModel):
     question: str
     answer: str
+
+
+class UserInformation(BaseModel):
+    user_id: str
+    full_name: str
+    email: str
+
+
+class VoiceSessionParams(BaseModel):
+    user_id: str
+    name: Optional[str] = "NA"
+    email: Optional[str] = "NA"
+    session_id: Optional[str] = None  # Extracted from JWT token
+    user_name: Optional[str] = None  # Newly added field  # Extracted from JWT token
+
+
+class UploadFileParams(BaseModel):
+    """Parameters for file upload service."""
+
+    file: UploadFile
+    user_id: str
+    subject_name: str
+    user_name: str
 
 
 class GenerateEmbeddingResponse(BaseModel):

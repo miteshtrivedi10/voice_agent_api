@@ -14,6 +14,12 @@ load_dotenv()
 
 # API configuration
 API_BASE_URL = "http://localhost:8000"  # Change this to your actual API URL
+# Import settings
+from logic.config import settings
+
+# For the example client, we still need to get the token from environment directly
+# since it's not part of the main application settings
+import os
 SUPABASE_JWT_TOKEN = os.getenv("SUPABASE_JWT_TOKEN")  # Get token from environment
 
 # Headers with authentication

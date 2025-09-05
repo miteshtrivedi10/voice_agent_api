@@ -25,6 +25,7 @@ A FastAPI-based API for handling voice sessions and file uploads with Supabase i
    export LIVEKIT_API_SECRET=your_api_secret
    export SUPABASE_URL=your_supabase_url
    export SUPABASE_KEY=your_supabase_key
+   export UPLOAD_DIRECTORY=/absolute/path/to/upload/directory
    ```
 
 3. Run the application:
@@ -40,6 +41,17 @@ Authorization: Bearer <your-jwt-token>
 ```
 
 The token is validated against Supabase's JWKS endpoint. Invalid or expired tokens will result in a 401 Unauthorized response.
+
+The JWT token must contain the following claims:
+- `sub` or `uid`: User ID
+- `full_name` or `name`: User's full name
+- `email`: User's email address
+
+These values are extracted from the token and used in various parts of the application.
+
+## File Uploads
+
+Uploaded files are stored in a directory specified by the `UPLOAD_DIRECTORY` environment variable. If not set, files will be stored in the `uploaded_files` directory relative to the application root.
 
 ## API Endpoints
 
