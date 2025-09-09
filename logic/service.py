@@ -87,11 +87,15 @@ async def insert_file_details_async(
                 await process_embedding_response(
                     file_data, embedding_response, user_name
                 )  # user_name already passed
-                
+
                 # Update the is_processed flag to True
                 file_data.is_processed = True
-                file_data.total_generated_qna = len(embedding_response.question_and_answers)
-                success = await update_file_details(FileDetailsDB(**file_data.model_dump()))
+                file_data.total_generated_qna = len(
+                    embedding_response.question_and_answers
+                )
+                success = await update_file_details(
+                    FileDetailsDB(**file_data.model_dump())
+                )
                 if success:
                     logger.info(
                         f"Successfully updated file details for user_id: {file_data.user_id}, file_id: {file_data.file_id}"
@@ -242,6 +246,7 @@ async def create_voice_session_service(
     token = api.AccessToken(settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
     token.with_identity(participant_name)
     token.with_name(participant_name)
+    token.with_metadata(f"USERID={participant_name}")
     token.with_grants(
         api.VideoGrants(
             room_join=True,
