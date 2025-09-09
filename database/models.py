@@ -1,10 +1,5 @@
 """Database models for Supabase tables."""
-from model.dtos import UserVoiceSessions, FileDetails, QuestionAndAnswers
-
-
-class UserVoiceSessionsDB(UserVoiceSessions):
-    """Database model for user voice sessions."""
-    pass
+from model.dtos import FileDetails, QuestionAndAnswers
 
 
 class FileDetailsDB(FileDetails):

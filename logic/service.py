@@ -12,16 +12,14 @@ from loguru import logger
 from model.dtos import (
     FileDetails,
     VoiceSessionResponse,
-    UserVoiceSessions,
     VoiceSessionParams,
     GenerateEmbeddingRequest,
     GenerateEmbeddingResponse,
     QuestionAndAnswers,
     UploadFileParams,
 )
-from database.models import UserVoiceSessionsDB, FileDetailsDB, QuestionAndAnswersDB
+from database.models import FileDetailsDB, QuestionAndAnswersDB
 from database.repository import (
-    create_user_voice_session,
     create_file_details,
     create_question_and_answers,
     update_file_details,
@@ -239,20 +237,6 @@ async def create_voice_session_service(
     )
 
     jwt_token = token.to_jwt()
-
-    # Use session_id from JWT token if available, otherwise use room_name
-    session_id = params.session_id if params.session_id else room_name
-
-    # Create UserVoiceSessions object with default values for missing fields
-    session_data = UserVoiceSessions(
-        id=str(uuid.uuid4()),
-        user_id=params.user_id,
-        session_id=session_id,
-        room_name=room_name,
-        duration=0,  # Default value
-        start_time=get_today_timestamp(),
-        end_time="",  # Default value
-    )
 
     logger.info(f"Voice session created successfully for user_id: {params.user_id}")
 
