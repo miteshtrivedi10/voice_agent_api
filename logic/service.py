@@ -36,26 +36,6 @@ def get_today_timestamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-async def insert_voice_session_async(session_data: UserVoiceSessions):
-    """Asynchronously insert voice session data into database"""
-    try:
-        # Convert to database model
-        db_session = UserVoiceSessionsDB(**session_data.model_dump())
-
-        # Insert into database
-        success = await create_user_voice_session(db_session)
-        if success:
-            logger.info(
-                f"Successfully inserted voice session for user_id: {session_data.user_id}"
-            )
-        else:
-            logger.error(
-                f"Failed to insert voice session for user_id: {session_data.user_id}"
-            )
-    except Exception as e:
-        logger.error(f"Error in async voice session insertion: {e}")
-
-
 async def insert_file_details_async(
     file_data: FileDetails, user_name: str
 ):  # user_name parameter already exists
@@ -237,10 +217,11 @@ async def create_voice_session_service(
         f"Creating voice session for user_id: {params.user_id}, name: {params.name}, email: {params.email}"
     )
 
-    # Generate unique room and participant
-    room_name = f"voice_session_{uuid.uuid4().hex[:8]}"
     # Use user_name as participant_name if available, otherwise fallback to user_id
     participant_name = params.user_name if params.user_name else params.user_id
+
+    # Generate unique room and participant
+    room_name = f"{participant_name}_{uuid.uuid4().hex[:8]}"
 
     # Create room token
     token = api.AccessToken(settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
@@ -272,10 +253,6 @@ async def create_voice_session_service(
         start_time=get_today_timestamp(),
         end_time="",  # Default value
     )
-
-    # Schedule async database insertion before returning response
-    # This is non-blocking and won't delay the API response
-    asyncio.create_task(insert_voice_session_async(session_data))
 
     logger.info(f"Voice session created successfully for user_id: {params.user_id}")
 
