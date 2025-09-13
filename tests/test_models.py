@@ -1,28 +1,22 @@
 """Tests for the data models."""
 import pytest
 from datetime import datetime
-from model.dtos import UserVoiceSessions, FileDetails
+from model.dtos import FileDetails, VoiceSessionResponse
 
 
-def test_user_voice_session_creation():
-    """Test UserVoiceSessions model creation."""
-    session = UserVoiceSessions(
-        id="test_id",
-        user_id="test_user",
-        session_id="test_session",
+def test_voice_session_response_creation():
+    """Test VoiceSessionResponse model creation."""
+    session = VoiceSessionResponse(
         room_name="test_room",
-        duration=100,
-        start_time="2023-01-01 12:00:00",
-        end_time="2023-01-01 12:01:00"
+        token="test_token",
+        ws_url="ws://test.url",
+        participant_name="test_participant"
     )
     
-    assert session.id == "test_id"
-    assert session.user_id == "test_user"
-    assert session.session_id == "test_session"
     assert session.room_name == "test_room"
-    assert session.duration == 100
-    assert session.start_time == "2023-01-01 12:00:00"
-    assert session.end_time == "2023-01-01 12:01:00"
+    assert session.token == "test_token"
+    assert session.ws_url == "ws://test.url"
+    assert session.participant_name == "test_participant"
 
 
 def test_file_details_creation():

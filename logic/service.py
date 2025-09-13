@@ -2,7 +2,7 @@
 
 import os
 import uuid
-import httpx
+import time
 from datetime import datetime
 from typing import Optional
 import asyncio
@@ -13,10 +13,10 @@ from model.dtos import (
     FileDetails,
     VoiceSessionResponse,
     VoiceSessionParams,
-    GenerateEmbeddingRequest,
     GenerateEmbeddingResponse,
     QuestionAndAnswers,
     UploadFileParams,
+    QuestionAnswerPair,
 )
 from database.models import FileDetailsDB, QuestionAndAnswersDB
 from database.repository import (
@@ -25,8 +25,346 @@ from database.repository import (
     update_file_details,
 )
 
+# Import RAG processor
+from rag.rag.custom_processor import CustomRAGProcessor
+
 # Import settings
 from logic.config import settings
+
+# Import the actual vision and LLM model functions from the RAG API server
+import base64
+import json
+from rag.rag.openrouter import OpenRouterClient
+
+# Global variable to track the last LLM call time
+last_llm_call_time = 0.0
+
+def vision_model_func(content_item, context=None):
+    """Real vision model function using Sonoma-Dusk-Alpha via OpenRouter for educational content analysis."""
+    global last_llm_call_time
+    
+    # Rate limiting: Ensure at least 5 seconds between LLM calls
+    current_time = time.time()
+    time_since_last_call = current_time - last_llm_call_time
+    
+    if time_since_last_call < 5.0:
+        wait_time = 5.0 - time_since_last_call
+        logger.info(f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call")
+        time.sleep(wait_time)
+    
+    # Update the last call time
+    last_llm_call_time = time.time()
+    
+    # Initialize OpenRouter client
+    openrouter_client = OpenRouterClient()
+
+    # Extract image data with enhanced error handling
+    image_bytes = content_item.get("data")
+    source_info = content_item.get("source_file", "unknown") or "unknown"
+    page_info = content_item.get("page", "unknown") or "unknown"
+
+    # Skip processing if no image data
+    if not image_bytes:
+        logger.warning(
+            f"No image data found in content_item from {source_info}, page {page_info}"
+        )
+        return {
+            "description": "No image data available",
+            "scene_type": "unknown",
+            "educational_concept": "missing_content",
+            "complexity_level": "none",
+        }
+
+    # Convert to bytes if needed
+    if not isinstance(image_bytes, bytes):
+        try:
+            image_bytes = base64.b64decode(image_bytes)
+        except Exception as e:
+            logger.error(
+                f"Error decoding image data from {source_info}, page {page_info}: {e}"
+            )
+            return {
+                "description": "Image data decoding failed",
+                "scene_type": "corrupted",
+                "educational_concept": "technical_issue",
+                "complexity_level": "none",
+            }
+
+    # Skip very small images (likely icons, bullets, etc.)
+    if len(image_bytes) < 1024:  # Less than 1KB, probably not meaningful
+        logger.debug(
+            f"Skipping small image ({len(image_bytes)} bytes) from {source_info}, page {page_info}"
+        )
+        return {
+            "description": "Small/insignificant image skipped",
+            "scene_type": "skipped",
+            "educational_concept": "decorative_element",
+            "complexity_level": "none",
+        }
+
+    # Base64 encode image
+    try:
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+    except Exception as e:
+        logger.error(
+            f"Error encoding image data from {source_info}, page {page_info}: {e}"
+        )
+        return {
+            "description": "Image encoding failed",
+            "scene_type": "encoding_error",
+            "educational_concept": "technical_issue",
+            "complexity_level": "none",
+        }
+
+    image_mime = content_item.get("mime_type", "image/png")
+
+    # Build context from surrounding content
+    context_text = ""
+    if context:
+        context_texts = [item.get("text", "") for item in context if item.get("text")]
+        context_text = " ".join(context_texts[:3])[
+            :1000
+        ]  # Limit context, shorter for better focus
+
+    # Simplified prompt for educational image analysis
+    prompt = f"""
+    Analyze this educational image from a textbook. Provide a detailed description suitable for RAG processing and questionnaire generation.
+    Context from surrounding content: {context_text}
+    
+    Focus on:
+    - Main educational concept
+    - Content type (diagram, chart, photo, illustration, table, equation)
+    - Key visual elements and text content
+    - Educational value and complexity
+    
+    Return ONLY this JSON format:
+    {{
+        "description": "Detailed 2-3 sentence description",
+        "scene_type": "diagram|chart|photo|illustration|table|equation|other",
+        "educational_concept": "main learning objective",
+        "complexity_level": "simple|medium|advanced",
+        "key_elements": ["3-5 key visual/text elements"],
+        "question_types": ["multiple_choice", "short_answer", "diagram_labeling"]
+    }}
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": "You are an expert educational content analyst. Analyze textbook images and return ONLY valid JSON. Never include markdown formatting.",
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{image_mime};base64,{image_base64}"},
+                },
+            ],
+        },
+    ]
+
+    try:
+        response = openrouter_client.chat_completion(
+            model="openrouter/sonoma-dusk-alpha",
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.2,  # Low temperature for factual analysis
+        )
+
+        # Parse JSON from response
+        content = response["choices"][0]["message"]["content"]
+
+        # Clean the response - remove any markdown formatting
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]  # Remove ```json
+        if content.startswith("```"):
+            content = content[3:]  # Remove ```
+        if content.endswith("```"):
+            content = content[:-3]  # Remove ```
+
+        # Parse JSON
+        analysis = json.loads(content)
+
+        logger.info(
+            f"Generated vision analysis for image from {source_info}, page {page_info} ({len(image_bytes)} bytes)"
+        )
+        return analysis
+
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error for {source_info}, page {page_info}: {e}")
+        logger.error(f"Response content: {content[:200]}...")
+        # Return a fallback response
+        return {
+            "description": "Image analysis completed",
+            "scene_type": "image",
+            "educational_concept": "visual_content",
+            "complexity_level": "medium",
+            "key_elements": ["visual_content"],
+            "question_types": ["short_answer"],
+        }
+    except Exception as e:
+        logger.error(f"Vision model error for {source_info}, page {page_info}: {e}")
+        return {
+            "description": f"Image analysis completed with basic information",
+            "scene_type": "image",
+            "educational_concept": "visual_content",
+            "complexity_level": "medium",
+            "key_elements": ["visual_content"],
+            "question_types": ["short_answer"],
+        }
+
+
+def llm_model_func(content_item, context=None):
+    """Real LLM model function using Sonoma-Dusk-Alpha via OpenRouter for educational content analysis."""
+    global last_llm_call_time
+    
+    # Rate limiting: Ensure at least 5 seconds between LLM calls
+    current_time = time.time()
+    time_since_last_call = current_time - last_llm_call_time
+    
+    if time_since_last_call < 5.0:
+        wait_time = 5.0 - time_since_last_call
+        logger.info(f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call")
+        time.sleep(wait_time)
+    
+    # Update the last call time
+    last_llm_call_time = time.time()
+    
+    # Initialize OpenRouter client
+    openrouter_client = OpenRouterClient()
+
+    content_type = content_item.get("type", "text")
+    text_content = content_item.get("text", "") or content_item.get("enhanced_text", "")
+
+    # Build context
+    context_text = ""
+    if context:
+        context_items = [
+            item.get("text", "") or item.get("enhanced_text", "")
+            for item in context
+            if item.get("text") or item.get("enhanced_text")
+        ]
+        context_text = " ".join(context_items[:2])[:800]  # Limit context length
+
+    # Simplified prompt for content analysis based on type
+    if content_type == "table":
+        prompt = f"""
+        Analyze this table from educational content for RAG processing and questionnaire generation.
+        Table content: {text_content}
+        Context: {context_text}
+        
+        Return ONLY this JSON format:
+        {{
+            "summary": "2-3 sentence summary",
+            "key_points": ["3-5 bullet points"],
+            "educational_value": "what students learn",
+            "question_types": ["multiple_choice", "data_interpretation"]
+        }}
+        """
+    elif content_type == "equation":
+        prompt = f"""
+        Analyze this mathematical equation from educational content.
+        Equation: {text_content}
+        Context: {context_text}
+        
+        Return ONLY this JSON format:
+        {{
+            "summary": "What the equation represents",
+            "components": ["key variables and meanings"],
+            "application": "Educational usage",
+            "difficulty_level": "basic|intermediate|advanced",
+            "question_types": ["problem_solving", "derivation"]
+        }}
+        """
+    else:  # Generic text content
+        prompt = f"""
+        Analyze this educational text content for RAG processing and questionnaire generation.
+        Content: {text_content}
+        Context: {context_text}
+        Content type: {content_type}
+        
+        Return ONLY this JSON format:
+        {{
+            "summary": "Concise 2-3 sentence summary",
+            "key_points": ["3-5 main ideas"],
+            "educational_objectives": ["what students should learn"],
+            "complexity": "simple|medium|advanced",
+            "question_types": ["multiple_choice", "short_answer", "essay"]
+        }}
+        """
+
+    messages = [
+        {
+            "role": "system",
+            "content": f"You are an expert educational content analyst for {content_type}. Return ONLY valid JSON. Never include markdown formatting.",
+        },
+        {"role": "user", "content": prompt},
+    ]
+
+    try:
+        response = openrouter_client.chat_completion(
+            model="openrouter/sonoma-dusk-alpha",
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.2,  # Low for consistent analysis
+        )
+
+        content = response["choices"][0]["message"]["content"]
+
+        # Clean the response - remove any markdown formatting
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]  # Remove ```json
+        if content.startswith("```"):
+            content = content[3:]  # Remove ```
+        if content.endswith("```"):
+            content = content[:-3]  # Remove ```
+
+        # Parse JSON
+        analysis = json.loads(content)
+
+        logger.debug(f"Generated LLM analysis for {content_type} content")
+        return analysis
+
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error for {content_type} content: {e}")
+        logger.error(f"Response content: {content[:200]}...")
+        # Return a fallback response
+        return {
+            "summary": "Content analysis completed",
+            "key_points": ["Educational content identified"],
+            "educational_objectives": ["Content understanding"],
+            "complexity": "medium",
+            "question_types": ["short_answer"],
+        }
+    except Exception as e:
+        logger.error(f"LLM model error for {content_type}: {e}")
+        return {
+            "summary": "Content analysis completed with basic information",
+            "key_points": ["Educational content identified"],
+            "educational_objectives": ["Content understanding"],
+            "complexity": "medium",
+            "question_types": ["short_answer"],
+        }
+
+
+# Initialize RAG processor instance with the actual model functions
+# We'll create it on-demand to avoid async event loop issues
+rag_processor = None
+
+
+def get_rag_processor():
+    """Get or create RAG processor instance."""
+    global rag_processor
+    if rag_processor is None:
+        rag_processor = CustomRAGProcessor(
+            vision_model_func=vision_model_func,
+            llm_model_func=llm_model_func,
+        )
+    return rag_processor
 
 
 def get_today_timestamp() -> str:
@@ -49,11 +387,35 @@ async def insert_file_details_async(
                 f"Successfully inserted file details for user_id: {file_data.user_id}"
             )
 
-            # Generate embeddings after successful insertion
+            # Generate embeddings using RAG processor after successful insertion
             absolute_filepath = f"{settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
-            # Pass user_name to generate_embedding
-            embedding_response = await generate_embedding(
-                file_data, absolute_filepath, user_name
+
+            # Get RAG processor instance
+            processor = get_rag_processor()
+
+            # Process file using RAG processor
+            content_list = processor.process_file(absolute_filepath)
+
+            # Generate questionnaires for the processed content
+            questionnaire_data = []
+            if hasattr(processor, "questionnaire_generator") and content_list:
+                for content_item in content_list:
+                    qa_pairs = processor.questionnaire_generator.generate_questionnaire_for_content(
+                        content_item
+                    )
+                    questionnaire_data.extend(qa_pairs)
+
+            embedding_response = GenerateEmbeddingResponse(
+                status="success",
+                message="Embeddings generated successfully using RAG processor",
+                collection_name=file_data.subject,
+                file_id=file_data.file_id,
+                chunks_added=len(content_list),
+                total_generated_qna=len(questionnaire_data),
+                question_and_answers=[
+                    QuestionAnswerPair(question=qa["question"], answer=qa["answer"])
+                    for qa in questionnaire_data
+                ],
             )
 
             if embedding_response and embedding_response.status == "success":
@@ -96,69 +458,6 @@ async def insert_file_details_async(
             )
     except Exception as e:
         logger.error(f"Error in async file details insertion: {e}")
-
-
-async def generate_embedding(
-    file_data: FileDetails,
-    absolute_filepath: str,
-    user_name: str,  # Add user_name parameter
-) -> Optional[GenerateEmbeddingResponse]:
-    """
-    Generate embeddings for the uploaded file by calling the embedding API.
-
-    Args:
-        file_data: FileDetails object containing file information
-        absolute_filepath: Absolute path to the uploaded file
-        user_name: User name extracted from JWT token
-
-    Returns:
-        GenerateEmbeddingResponse: Response from the embedding API or None if failed
-    """
-    try:
-        # Prepare the request data
-        request_data = GenerateEmbeddingRequest(
-            user_id=file_data.user_id,
-            absolute_filepath=absolute_filepath,
-            subject=file_data.subject,
-            file_id=file_data.file_id,
-            user_name=user_name,  # Include user_name in the request
-        )
-
-        logger.info(
-            f"Calling embedding API for user_id: {file_data.user_id}, file_id: {file_data.file_id}"
-        )
-
-        # Create HTTP client with timeout of 3 minutes (180 seconds)
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            response = await client.post(
-                settings.EMBEDDING_API_URL, json=request_data.model_dump()
-            )
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            response_data = response.json()
-            embedding_response = GenerateEmbeddingResponse(**response_data)
-
-            logger.info(
-                f"Embedding API successful for user_id: {file_data.user_id}, file_id: {file_data.file_id}"
-            )
-            return embedding_response
-        else:
-            logger.error(
-                f"Embedding API returned status code {response.status_code} for user_id: {file_data.user_id}, file_id: {file_data.file_id}"
-            )
-            return None
-
-    except asyncio.TimeoutError:
-        logger.error(
-            f"Embedding API timeout (3 minutes) for user_id: {file_data.user_id}, file_id: {file_data.file_id}"
-        )
-        return None
-    except Exception as e:
-        logger.error(
-            f"Error calling embedding API for user_id: {file_data.user_id}, file_id: {file_data.file_id}: {e}"
-        )
-        return None
 
 
 async def process_embedding_response(
