@@ -35,4 +35,5 @@ dependencies = [
     "raganything[all]>=1.2.7",
     "requests>=2.32.5",
     "sentence-transformers>=5.1.0",
+    "poppler-utils>=0.1.0",
 ]

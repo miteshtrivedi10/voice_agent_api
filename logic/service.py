@@ -27,15 +27,18 @@ from database.repository import (
 
 # Import RAG processor
 from rag.rag.custom_processor import CustomRAGProcessor
-from rag.config.settings import settings
+from rag.config.settings import settings as rag_settings
 
 # Import settings
-from logic.config import settings
+from logic.config import settings as logic_settings
 
 # Import the actual vision and LLM model functions from the RAG API server
 import base64
 import json
 from rag.rag.openrouter import OpenRouterClient
+
+# Debug: Print settings to verify they're loaded correctly
+# logger.info(f"RAG Settings OPENROUTER_MODEL: {getattr(rag_settings, 'OPENROUTER_MODEL', 'NOT FOUND')}")
 
 # Global variable to track the last LLM call time
 last_llm_call_time = 0.0
@@ -168,7 +171,7 @@ def vision_model_func(content_item, context=None):
 
     try:
         response = openrouter_client.chat_completion(
-            model=settings.OPENROUTER_MODEL,
+            model=rag_settings.OPENROUTER_MODEL,
             messages=messages,
             max_tokens=1000,
             temperature=0.2,  # Low temperature for factual analysis
@@ -208,14 +211,12 @@ def vision_model_func(content_item, context=None):
         }
     except Exception as e:
         logger.error(f"Vision model error for {source_info}, page {page_info}: {e}")
-        return {
-            "description": f"Image analysis completed with basic information",
-            "scene_type": "image",
-            "educational_concept": "visual_content",
-            "complexity_level": "medium",
-            "key_elements": ["visual_content"],
-            "question_types": ["short_answer"],
-        }
+        # Check if the error is related to the OPENROUTER_MODEL setting
+        if "OPENROUTER_MODEL" in str(e):
+            logger.error("OPENROUTER_MODEL setting not found. Please check your environment configuration.")
+        # Return None to indicate that no valid analysis could be generated
+        # This will prevent the default question answer from being generated
+        return None
 
 
 def llm_model_func(content_item, context=None):
@@ -307,7 +308,7 @@ def llm_model_func(content_item, context=None):
 
     try:
         response = openrouter_client.chat_completion(
-            model=settings.OPENROUTER_MODEL,
+            model=rag_settings.OPENROUTER_MODEL,
             messages=messages,
             max_tokens=1000,
             temperature=0.2,  # Low for consistent analysis
@@ -390,7 +391,7 @@ async def insert_file_details_async(
             )
 
             # Generate embeddings using RAG processor after successful insertion
-            absolute_filepath = f"{settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
+            absolute_filepath = f"{logic_settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
 
             # Get RAG processor instance with user_name
             processor = get_rag_processor(user_name=user_name)
@@ -523,7 +524,7 @@ async def create_voice_session_service(
     room_name = f"{participant_name}_{uuid.uuid4().hex[:8]}"
 
     # Create room token
-    token = api.AccessToken(settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
+    token = api.AccessToken(logic_settings.LIVEKIT_API_KEY, logic_settings.LIVEKIT_API_SECRET)
     token.with_identity(participant_name)
     token.with_name(participant_name)
     token.with_metadata(f"USERID={participant_name}")
@@ -544,7 +545,7 @@ async def create_voice_session_service(
     return VoiceSessionResponse(
         room_name=room_name,
         token=jwt_token,
-        ws_url=settings.LIVEKIT_URL,
+        ws_url=logic_settings.LIVEKIT_URL,
         participant_name=participant_name,  # Use user_name as participant_name
     )
 
@@ -584,8 +585,8 @@ async def upload_files_service(params: UploadFileParams):
     content = b"".join(chunks)
 
     # Save file to upload directory (from environment variable)
-    os.makedirs(settings.UPLOAD_DIRECTORY, exist_ok=True)
-    file_path = f"{settings.UPLOAD_DIRECTORY}/{params.file.filename}"
+    os.makedirs(logic_settings.UPLOAD_DIRECTORY, exist_ok=True)
+    file_path = f"{logic_settings.UPLOAD_DIRECTORY}/{params.file.filename}"
     with open(file_path, "wb") as buffer:
         buffer.write(content)
 

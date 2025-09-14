@@ -98,8 +98,15 @@ class ImageModalProcessor(BaseModalProcessor):
         # Process the image with the vision model
         try:
             visual_analysis = self.vision_model_func(content_item, context)
-            metadata["visual_analysis"] = visual_analysis
-            metadata["has_visual_analysis"] = True
+            # Check if the vision model returned a valid analysis
+            if visual_analysis is not None:
+                metadata["visual_analysis"] = visual_analysis
+                metadata["has_visual_analysis"] = True
+            else:
+                # Vision model failed to generate analysis, mark as failed
+                metadata["visual_analysis"] = "Visual analysis failed - model returned None"
+                metadata["has_visual_analysis"] = False
+                logger.warning("Vision model returned None for content item")
             
             # Extract specific content types from visual analysis
             if isinstance(visual_analysis, dict):
