@@ -1,11 +1,9 @@
 """Custom RAG processor that uses simple synchronous embedding generation."""
-import logging
 import numpy as np
 from typing import List, Dict, Any, Optional
 from rag.rag.simple_embedding import SimpleEmbeddingGenerator
 from rag.rag.processor import RAGProcessor
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 class CustomRAGProcessor(RAGProcessor):
     """Custom RAG processor with synchronous embedding generation and enhanced content analysis."""

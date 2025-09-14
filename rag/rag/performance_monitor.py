@@ -1,13 +1,11 @@
 import time
-import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from collections import defaultdict
 import json
 import threading
 from datetime import datetime
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 @dataclass

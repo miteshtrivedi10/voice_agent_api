@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Union
-import logging
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class BaseEmbeddingGenerator(ABC):

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 import asyncio
 from livekit import api
-from loguru import logger
+from logic.logging_config import configured_logger as logger
 
 from model.dtos import (
     FileDetails,

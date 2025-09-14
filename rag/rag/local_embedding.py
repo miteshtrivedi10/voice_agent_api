@@ -1,10 +1,8 @@
 import numpy as np
-import logging
 from typing import List, Optional, Union
 from sentence_transformers import SentenceTransformer
 import hashlib
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 class LocalEmbeddingGenerator:
     """Local embedding generator using sentence-transformers as reliable fallback."""

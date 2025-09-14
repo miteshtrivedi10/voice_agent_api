@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from jwt import PyJWTError
 import httpx
-from loguru import logger
+from logic.logging_config import configured_logger as logger
 
 # Import settings
 from logic.config import settings

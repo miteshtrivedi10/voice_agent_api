@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-import logging
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class BaseModalProcessor(ABC):

@@ -1,8 +1,6 @@
 from typing import List, Dict, Any, Optional, Callable
-import logging
 from .base_processor import BaseModalProcessor
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class TableModalProcessor(BaseModalProcessor):

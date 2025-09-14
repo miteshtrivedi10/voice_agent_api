@@ -1,10 +1,8 @@
 """Simple synchronous embedding generator for testing."""
 import numpy as np
 import requests
-import logging
 from typing import List, Union
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 class SimpleEmbeddingGenerator:
     """Simple synchronous embedding generator using Ollama's nomic-embed-text model."""

@@ -1,7 +1,7 @@
 """Repository layer for database operations."""
 import asyncio
 from typing import Any, Dict
-from loguru import logger
+from logic.logging_config import configured_logger as logger
 from database.supabase_client import get_supabase_client
 from database.models import FileDetailsDB, QuestionAndAnswersDB
 

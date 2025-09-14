@@ -1,4 +1,3 @@
-import logging
 import os
 import json
 import uuid
@@ -10,8 +9,7 @@ from pymilvus import MilvusClient, DataType, CollectionSchema, FieldSchema, Inde
 from pymilvus.milvus_client.index import IndexParams
 from rag.config.settings import settings
 from rag.utils.exceptions import FileProcessingError
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class RegionCoords(BaseModel):

@@ -1,5 +1,4 @@
 import os
-import logging
 import asyncio
 import aiohttp
 import requests
@@ -16,8 +15,7 @@ from tenacity import (
 )
 from rag.config.settings import settings
 from .embedding import BaseEmbeddingGenerator
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class OpenRouterClient:

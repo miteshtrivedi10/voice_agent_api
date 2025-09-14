@@ -1,11 +1,9 @@
 from typing import List, Dict, Any, Optional
-import logging
 import json
 import re
 from rag.rag.openrouter import OpenRouterClient
 from rag.config.settings import settings
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class QuestionnaireGenerator:

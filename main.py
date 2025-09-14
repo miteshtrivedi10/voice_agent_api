@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBearer
 from starlette.middleware.cors import CORSMiddleware
-from loguru import logger
+from logic.logging_config import configured_logger as logger
 import os
 import sys
 from logic.api import router
@@ -13,9 +13,6 @@ _ = load_dotenv(override=True)
 
 app = FastAPI(title="Voice Tutor Agent API")
 
-# Configure loguru for console output with Uvicorn-like format
-logger.remove()
-logger.add(sys.stdout, level="INFO", format="{level}:     {message}", colorize=False)
 print("=== Voice Agent API Starting ===")
 logger.info("Application starting...")
 

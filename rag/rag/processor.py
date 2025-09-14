@@ -22,8 +22,7 @@ from rag.rag.nomic_embedding import NomicEmbeddingGenerator
 from rag.rag.storage import MilvusStorage
 from rag.rag.performance_monitor import PerformanceTimer, get_global_monitor
 from rag.rag.questionnaire_generator import QuestionnaireGenerator
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 @dataclass
 class SemanticRelation:

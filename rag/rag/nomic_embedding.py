@@ -1,6 +1,5 @@
 import os
 import hashlib
-import logging
 import asyncio
 import aiohttp
 import json
@@ -15,8 +14,7 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 
 class NomicEmbeddingGenerator(BaseEmbeddingGenerator):

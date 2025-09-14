@@ -32,7 +32,7 @@ try:
 except ImportError:
     PDF2IMAGE_AVAILABLE = False
 
-logger = logging.getLogger(__name__)
+from logic.logging_config import configured_logger as logger
 
 class DocumentParser:
     """

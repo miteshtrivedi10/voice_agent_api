@@ -1,7 +1,7 @@
 """Configuration management for the voice agent API."""
 import os
 from dotenv import load_dotenv
-from loguru import logger
+from logic.logging_config import configured_logger as logger
 from typing import Optional
 
 
@@ -27,6 +27,9 @@ class Settings:
         
         # Upload directory
         self.UPLOAD_DIRECTORY: str = os.getenv("UPLOAD_DIRECTORY", "uploaded_files")
+        
+        # Logging configuration
+        self.LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
         
         logger.info("Settings loaded successfully")
 
