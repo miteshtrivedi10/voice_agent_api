@@ -3,6 +3,7 @@ import logging
 import json
 import re
 from rag.rag.openrouter import OpenRouterClient
+from rag.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class QuestionnaireGenerator:
     def __init__(
         self,
         openrouter_client: OpenRouterClient,
-        llm_model: str = "openrouter/sonoma-dusk-alpha",
+        llm_model: str = None,
     ):
         """
         Initialize the QuestionnaireGenerator.
@@ -31,7 +32,7 @@ class QuestionnaireGenerator:
             llm_model: LLM model to use for generation (will be replaced with actual model later)
         """
         self.openrouter_client = openrouter_client
-        self.llm_model = llm_model
+        self.llm_model = llm_model or settings.OPENROUTER_MODEL
 
     def generate_questionnaire_for_content(
         self, content_item: Dict[str, Any]

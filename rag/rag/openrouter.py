@@ -13,8 +13,8 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
     retry_if_exception_type,
-    retry_if_not_exception_type,
 )
+from rag.config.settings import settings
 from .embedding import BaseEmbeddingGenerator
 
 logger = logging.getLogger(__name__)
@@ -55,9 +55,9 @@ class OpenRouterClient:
         if not self.api_key:
             logger.warning("OpenRouter API key not provided. API calls will not work.")
 
-        # High-accuracy prompts optimized for educational RAG processing with Sonoma Dusk Alpha
+        # High-accuracy prompts optimized for educational RAG processing with the configured model
         self.EDUCATIONAL_PROMPTS = {
-            "image_multimodal_analysis": """You are an expert educational content analyst using Sonoma Dusk Alpha for RAG processing. Analyze this textbook image with high precision.
+            "image_multimodal_analysis": """You are an expert educational content analyst using the configured model for RAG processing. Analyze this textbook image with high precision.
 
 Context from surrounding content: {context}
 
@@ -131,11 +131,11 @@ Return ONLY valid JSON with this exact structure. Ensure all fields are populate
   }},
   "processing_metadata": {{
     "analysis_timestamp": "{timestamp}",
-    "model_version": "sonoma-dusk-alpha",
+    "model_version": "configured-model",
     "input_quality": "high"
   }}
 }}""",
-            "content_classification": """Classify educational content type with high accuracy for RAG processing using Sonoma Dusk Alpha.
+            "content_classification": """Classify educational content type with high accuracy for RAG processing using the configured model.
 
 Input content: {content}
 Surrounding context: {context}
@@ -175,7 +175,7 @@ Return ONLY valid JSON with precise classification:
   "processing_recommendation": "direct_text_extraction|ocr_required|multimodal_analysis|table_parsing|equation_recognition|skip_low_value",
   "rag_value": "high|medium|low"
 }}""",
-            "semantic_summarization": """Create high-quality semantic summary for RAG processing using Sonoma Dusk Alpha.
+            "semantic_summarization": """Create high-quality semantic summary for RAG processing using the configured model.
 
 Source content: {content}
 Document context: {context}
@@ -208,7 +208,7 @@ Return ONLY valid JSON with comprehensive structure:
   "summary_length_chars": 250,
   "processing_metadata": {{
     "timestamp": "{timestamp}",
-    "model": "sonoma-dusk-alpha",
+    "model": "configured-model",
     "input_tokens": 0,
     "output_tokens": 0
   }}

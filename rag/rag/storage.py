@@ -107,6 +107,7 @@ class MilvusStorage:
         uri: str,
         token: str,
         collection_name: str = "rag_embeddings_enhanced",
+        user_name: Optional[str] = None,
         auto_create: bool = True,
         use_mock_on_failure: bool = False,
     ):
@@ -117,12 +118,14 @@ class MilvusStorage:
             uri: Milvus Cloud URI (required)
             token: Milvus Cloud token (required)
             collection_name: Collection name
+            user_name: User name to create user-specific collection
             auto_create: Automatically create collection if not exists
             use_mock_on_failure: Fallback to mock storage if Milvus connection fails
         """
         self.uri = uri
         self.token = token
-        self.collection_name = collection_name
+        # If user_name is provided, use it to create a user-specific collection name
+        self.collection_name = f"{user_name}_collection" if user_name else collection_name
         self.auto_create = auto_create
         self.use_mock_on_failure = use_mock_on_failure
         self.client = None

@@ -36,6 +36,9 @@ class Settings:
     OLLAMA_SONOMA_MODEL: str = os.getenv("OLLAMA_SONOMA_MODEL", "sonoma-dusk-alpha")
     OLLAMA_NOMIC_MODEL: str = os.getenv("OLLAMA_NOMIC_MODEL", "nomic-embed-text")
 
+    # OpenRouter model settings
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openrouter/sonoma-dusk-alpha")
+
     # Image-based PDF detection
     ENABLE_IMAGE_PDF_DETECTION: bool = (
         os.getenv("ENABLE_IMAGE_PDF_DETECTION", "true").lower() == "true"

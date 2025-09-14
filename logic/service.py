@@ -27,6 +27,7 @@ from database.repository import (
 
 # Import RAG processor
 from rag.rag.custom_processor import CustomRAGProcessor
+from rag.config.settings import settings
 
 # Import settings
 from logic.config import settings
@@ -167,7 +168,7 @@ def vision_model_func(content_item, context=None):
 
     try:
         response = openrouter_client.chat_completion(
-            model="openrouter/sonoma-dusk-alpha",
+            model=settings.OPENROUTER_MODEL,
             messages=messages,
             max_tokens=1000,
             temperature=0.2,  # Low temperature for factual analysis
@@ -306,7 +307,7 @@ def llm_model_func(content_item, context=None):
 
     try:
         response = openrouter_client.chat_completion(
-            model="openrouter/sonoma-dusk-alpha",
+            model=settings.OPENROUTER_MODEL,
             messages=messages,
             max_tokens=1000,
             temperature=0.2,  # Low for consistent analysis
@@ -356,13 +357,14 @@ def llm_model_func(content_item, context=None):
 rag_processor = None
 
 
-def get_rag_processor():
+def get_rag_processor(user_name: Optional[str] = None):
     """Get or create RAG processor instance."""
     global rag_processor
     if rag_processor is None:
         rag_processor = CustomRAGProcessor(
             vision_model_func=vision_model_func,
             llm_model_func=llm_model_func,
+            user_name=user_name
         )
     return rag_processor
 
@@ -390,8 +392,8 @@ async def insert_file_details_async(
             # Generate embeddings using RAG processor after successful insertion
             absolute_filepath = f"{settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
 
-            # Get RAG processor instance
-            processor = get_rag_processor()
+            # Get RAG processor instance with user_name
+            processor = get_rag_processor(user_name=user_name)
 
             # Process file using RAG processor
             content_list = processor.process_file(absolute_filepath)

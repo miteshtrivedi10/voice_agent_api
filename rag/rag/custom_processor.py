@@ -12,10 +12,11 @@ class CustomRAGProcessor(RAGProcessor):
     
     def __init__(self, storage=None, vision_model_func=None, llm_model_func=None, 
                  cache_size: int = 512, enable_async: bool = True, 
-                 max_group_size: int = 5, relation_threshold: float = 0.6):
+                 max_group_size: int = 5, relation_threshold: float = 0.6,
+                 user_name: Optional[str] = None):
         """Initialize the custom RAG processor."""
         super().__init__(storage, vision_model_func, llm_model_func, cache_size, 
-                         enable_async, max_group_size, relation_threshold)
+                         enable_async, max_group_size, relation_threshold, user_name)
         # Use our simple embedding generator for nomic-embed-text model
         self._embedding_generator = SimpleEmbeddingGenerator()
     

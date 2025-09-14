@@ -54,7 +54,8 @@ class RAGProcessor:
     def __init__(self, storage: Optional[MilvusStorage] = None, 
                  vision_model_func=None, llm_model_func=None,
                  cache_size: int = 512, enable_async: bool = True, 
-                 max_group_size: int = 5, relation_threshold: float = 0.6):
+                 max_group_size: int = 5, relation_threshold: float = 0.6,
+                 user_name: Optional[str] = None):
         """
         Initialize the enhanced RAG processor with OpenRouter Sonoma and Nomic Ollama integration.
 
@@ -66,6 +67,7 @@ class RAGProcessor:
             enable_async: Enable async processing for performance
             max_group_size: Maximum elements per semantic group
             relation_threshold: Minimum confidence for detected relationships
+            user_name: User name for user-specific collection
         """
         # Core components
         self.parser = DocumentParser()
@@ -81,7 +83,8 @@ class RAGProcessor:
         # Initialize components
         self.storage = storage or MilvusStorage(
             uri=settings.MILVUS_URI, 
-            token=settings.MILVUS_TOKEN
+            token=settings.MILVUS_TOKEN,
+            user_name=user_name
         )
         self.file_handler = FileHandler()
         self.performance_monitor = get_global_monitor()
