@@ -49,19 +49,16 @@ async def create_voice_session(
 async def upload_files(
     file: UploadFile,
     subject_name: str = Form(...),
-    # token_payload: dict = Depends(get_current_user),
+    token_payload: dict = Depends(get_current_user),
 ):
     """Upload PDF files with validation and subject name"""
     try:
         # Extract user information from token
-        # user_info = get_user_info_from_token(token_payload)
-        # user_id = user_info["user_id"]
-        # full_name = user_info["full_name"]
-        # user_email = user_info["email"]
-        # user_name = user_info["user_name"]  # Extract user_name from token
-
-        user_id = "8c6f4719-ad2f-4330-9f53-1a059c27d44f"
-        user_name = "mitst"
+        user_info = get_user_info_from_token(token_payload)
+        user_id = user_info["user_id"]
+        full_name = user_info["full_name"]
+        user_email = user_info["email"]
+        user_name = user_info["user_name"]  # Extract user_name from token
 
         # Create parameter object
         from model.dtos import UploadFileParams
