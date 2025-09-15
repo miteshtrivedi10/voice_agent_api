@@ -575,17 +575,33 @@ async def create_voice_session_service(
 
 
 async def upload_files_service(params: UploadFileParams):
-    """Service function to upload PDF files with validation and subject name"""
+    """Service function to upload PDF, PNG, or JPG/JPEG files with validation and subject name"""
     logger.info(
         f"Uploading file for user_id: {params.user_id}, subject: {params.subject_name}"
     )
 
     # Check file type
-    if params.file.content_type != "application/pdf":
+    allowed_content_types = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg"
+    ]
+    
+    if params.file.content_type not in allowed_content_types:
         logger.warning(f"Invalid file type uploaded by user_id: {params.user_id}")
-        return {"status": "error", "message": "Only PDF files are allowed"}
+        return {"status": "error", "message": "Only PDF, PNG, or JPG/JPEG files are allowed"}
 
-    params.file.filename = params.user_id + "_" + uuid.uuid4().hex[:8] + ".pdf"
+    # Set appropriate file extension based on content type
+    if params.file.content_type == "application/pdf":
+        file_extension = ".pdf"
+    elif params.file.content_type == "image/png":
+        file_extension = ".png"
+    elif params.file.content_type == "image/jpeg":
+        file_extension = ".jpg"
+    else:
+        file_extension = ".pdf"  # fallback to PDF
+
+    params.file.filename = params.user_id + "_" + uuid.uuid4().hex[:8] + file_extension
 
     # Check file size (20MB limit)
     # Read file in chunks to check size without loading everything into memory
