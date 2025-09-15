@@ -14,6 +14,7 @@ class FileDetails(BaseModel):
     user_id: str
     file_id: str
     file_name: str
+    file_alias: str = ""  # New field to store original filename
     subject: str
     file_size: int
     file_type: str

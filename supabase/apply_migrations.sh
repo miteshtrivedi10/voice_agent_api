@@ -25,6 +25,7 @@ migrations=(
     "migrations/20250915000002_setup_security.sql"
     "migrations/20250915000003_add_processed_timestamp_trigger.sql"
     "migrations/20250915000004_setup_oauth_and_auth.sql"
+    "migrations/20250915000005_add_file_alias_column.sql"
 )
 
 for migration in "${migrations[@]}"; do

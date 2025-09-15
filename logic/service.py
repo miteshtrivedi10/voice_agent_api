@@ -580,6 +580,9 @@ async def upload_files_service(params: UploadFileParams):
         f"Uploading file for user_id: {params.user_id}, subject: {params.subject_name}"
     )
 
+    # Store the original filename before we modify it
+    original_filename = params.file.filename
+
     # Check file type
     allowed_content_types = [
         "application/pdf",
@@ -635,6 +638,7 @@ async def upload_files_service(params: UploadFileParams):
         user_id=params.user_id or "",
         file_id=str(uuid.uuid4()) or "",
         file_name=params.file.filename or "",
+        file_alias=original_filename or "",  # Store the original filename
         subject=params.subject_name or "",
         file_size=file_size,
         file_type=params.file.content_type or "",

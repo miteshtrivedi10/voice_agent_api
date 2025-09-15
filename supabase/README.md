@@ -17,7 +17,8 @@ Columns:
 - id (uuid, primary key)
 - user_id (text) - User identifier
 - file_id (text, unique) - File identifier
-- file_name (text) - Original file name
+- file_name (text) - Processed file name (UUID-based)
+- file_alias (text) - Original file name as uploaded by user
 - subject (text) - Subject/category of the file
 - file_size (bigint) - Size of the file in bytes
 - file_type (text) - MIME type of the file

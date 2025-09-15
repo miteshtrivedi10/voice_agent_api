@@ -38,11 +38,15 @@ union all
 select 'get_recent_qna function exists' as test_name,
        (select count(*) > 0 from pg_proc where proname = 'get_recent_qna') as result;
 
--- Test 6: Insert test data
+-- Test 6: Check if file_alias column exists
+select 'file_alias column exists' as test_name,
+       (select count(*) > 0 from information_schema.columns where table_name = 'file_details' and column_name = 'file_alias') as result;
+
+-- Test 7: Insert test data
 begin;
   -- Insert test file
-  insert into file_details (user_id, file_id, file_name, subject, file_size, file_type, is_processed, total_generated_qna, user_name)
-  values ('test-user-123', 'test-file-123', 'test.pdf', 'Test Subject', 1000, 'application/pdf', false, 0, 'Test User');
+  insert into file_details (user_id, file_id, file_name, file_alias, subject, file_size, file_type, is_processed, total_generated_qna, user_name)
+  values ('test-user-123', 'test-file-123', 'uuid-based-filename.pdf', 'tutor ml.pdf', 'Test Subject', 1000, 'application/pdf', false, 0, 'Test User');
   
   -- Update test file
   update file_details 
