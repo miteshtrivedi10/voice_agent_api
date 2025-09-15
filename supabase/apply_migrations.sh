@@ -24,6 +24,7 @@ migrations=(
     "migrations/20250915000001_create_question_and_answers_table.sql"
     "migrations/20250915000002_setup_security.sql"
     "migrations/20250915000003_add_processed_timestamp_trigger.sql"
+    "migrations/20250915000004_setup_oauth_and_auth.sql"
 )
 
 for migration in "${migrations[@]}"; do

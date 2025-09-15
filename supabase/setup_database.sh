@@ -43,3 +43,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Database setup completed successfully!"
+
+echo ""
+echo "Next steps:"
+echo "1. Configure OAuth providers through the Supabase dashboard (see oauth_setup_guide.md)"
+echo "2. Update your .env file with the necessary environment variables"
+echo "3. Test the authentication flow in your application"

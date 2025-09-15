@@ -22,6 +22,7 @@ echo "Deploying custom functions..."
 functions=(
     "functions/get_user_file_stats.sql"
     "functions/get_recent_qna.sql"
+    "functions/get_user_profile.sql"
 )
 
 for function in "${functions[@]}"; do

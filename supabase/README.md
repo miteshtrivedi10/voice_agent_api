@@ -44,6 +44,17 @@ Columns:
 - created_at (timestamptz) - Record creation timestamp
 - updated_at (timestamptz) - Record update timestamp
 
+### 3. users (public.users)
+Stores additional user profile information.
+
+Columns:
+- id (uuid, primary key) - References auth.users(id)
+- email (text, unique) - User's email address
+- full_name (text) - User's full name
+- avatar_url (text) - URL to user's avatar image
+- created_at (timestamptz) - Record creation timestamp
+- updated_at (timestamptz) - Record update timestamp
+
 ## Custom Functions
 
 ### 1. get_user_file_stats(user_id)
@@ -62,6 +73,19 @@ Returns recent Q&A pairs for a user:
 - answer - The generated answer
 - created_at - When the Q&A was created
 
+### 3. get_user_profile(user_id)
+Returns user profile information:
+- id - User identifier
+- email - User's email address
+- full_name - User's full name
+- avatar_url - URL to user's avatar image
+- created_at - When the profile was created
+- updated_at - When the profile was last updated
+
+## OAuth Provider Setup
+
+See `oauth_setup_guide.md` for detailed instructions on setting up OAuth providers.
+
 ## Setup Instructions
 
 1. Create a new Supabase project
@@ -70,10 +94,13 @@ Returns recent Q&A pairs for a user:
    - `20250915000001_create_question_and_answers_table.sql`
    - `20250915000002_setup_security.sql`
    - `20250915000003_add_processed_timestamp_trigger.sql`
+   - `20250915000004_setup_oauth_and_auth.sql`
 3. Deploy custom functions:
    - `functions/get_user_file_stats.sql`
    - `functions/get_recent_qna.sql`
-4. Run tests to verify setup:
+   - `functions/get_user_profile.sql`
+4. Configure OAuth providers through the Supabase dashboard (see `oauth_setup_guide.md`)
+5. Run tests to verify setup:
    - `tests/test_setup.sql`
 
 ## Best Practices Implemented
@@ -86,3 +113,4 @@ Returns recent Q&A pairs for a user:
 - Cascade delete for related records
 - Automatic processed_timestamp update when file is marked as processed
 - Comprehensive test suite for verification
+- OAuth provider support for authentication
