@@ -274,7 +274,7 @@ class CustomRAGProcessor(RAGProcessor):
         logger.info(f"Processing file with enhanced content extraction: {file_path}")
         
         # Call parent method for basic processing
-        content_list, questionnaire_data, _ = super().process_file(file_path)
+        content_list, questionnaire_data = super().process_file(file_path)
         
         # Enhance the content list with additional metadata for questionnaires
         enhanced_content_list = []
