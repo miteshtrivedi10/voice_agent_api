@@ -16,16 +16,19 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "Applying migrations..."
 
 # Apply migrations in order
 migrations=(
-    "migrations/20250915000000_create_file_details_table.sql"
-    "migrations/20250915000001_create_question_and_answers_table.sql"
-    "migrations/20250915000002_setup_security.sql"
-    "migrations/20250915000003_add_processed_timestamp_trigger.sql"
-    "migrations/20250915000004_setup_oauth_and_auth.sql"
-    "migrations/20250915000005_add_file_alias_column.sql"
+    "$SCRIPT_DIR/migrations/20250915000000_create_file_details_table.sql"
+    "$SCRIPT_DIR/migrations/20250915000001_create_question_and_answers_table.sql"
+    "$SCRIPT_DIR/migrations/20250915000002_setup_security.sql"
+    "$SCRIPT_DIR/migrations/20250915000003_add_processed_timestamp_trigger.sql"
+    "$SCRIPT_DIR/migrations/20250915000004_setup_oauth_and_auth.sql"
+    "$SCRIPT_DIR/migrations/20250915000005_add_file_alias_column.sql"
 )
 
 for migration in "${migrations[@]}"; do

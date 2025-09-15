@@ -16,11 +16,14 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "Setting up database..."
 
 # Apply migrations
 echo "Applying migrations..."
-./apply_migrations.sh
+$SCRIPT_DIR/apply_migrations.sh
 if [ $? -ne 0 ]; then
     echo "Failed to apply migrations"
     exit 1
@@ -28,7 +31,7 @@ fi
 
 # Deploy functions
 echo "Deploying functions..."
-./deploy_functions.sh
+$SCRIPT_DIR/deploy_functions.sh
 if [ $? -ne 0 ]; then
     echo "Failed to deploy functions"
     exit 1
@@ -36,7 +39,7 @@ fi
 
 # Run tests
 echo "Running tests..."
-psql $DATABASE_URL -f tests/test_setup.sql
+psql $DATABASE_URL -f $SCRIPT_DIR/tests/test_setup.sql
 if [ $? -ne 0 ]; then
     echo "Tests failed"
     exit 1

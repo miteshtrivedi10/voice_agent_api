@@ -16,13 +16,16 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "Deploying custom functions..."
 
 # Deploy functions
 functions=(
-    "functions/get_user_file_stats.sql"
-    "functions/get_recent_qna.sql"
-    "functions/get_user_profile.sql"
+    "$SCRIPT_DIR/functions/get_user_file_stats.sql"
+    "$SCRIPT_DIR/functions/get_recent_qna.sql"
+    "$SCRIPT_DIR/functions/get_user_profile.sql"
 )
 
 for function in "${functions[@]}"; do
