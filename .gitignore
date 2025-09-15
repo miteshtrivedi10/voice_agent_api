@@ -10,7 +10,7 @@ __pycache__/
 uploaded_files/
 upload/
 .vscode
-
+temp_supabase
 
 # Distribution / packaging
 .Python
