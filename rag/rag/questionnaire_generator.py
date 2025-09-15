@@ -215,6 +215,71 @@ class QuestionnaireGenerator:
             )
             return []
 
+    def generate_questionnaires(
+        self, content_items: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate questionnaires for all content items without printing to console.
+        Content items are grouped by page to generate one questionnaire per page.
+
+        Args:
+            content_items: List of content items processed by RAG pipeline
+
+        Returns:
+            List of all generated question-answer pairs
+        """
+        all_qa_pairs = []
+
+        # Group content items by source_file and page_id
+        grouped_content = {}
+        for item in content_items:
+            source_file = item.get("source_file", "unknown")
+            page_id = str(item.get("page_id", "unknown"))
+            key = (source_file, page_id)
+
+            if key not in grouped_content:
+                grouped_content[key] = []
+            grouped_content[key].append(item)
+
+        # Generate one questionnaire per page using consolidated content
+        for (source_file, page_id), page_items in grouped_content.items():
+            # Consolidate text content from all chunks for this page
+            consolidated_content = "\n\n".join(
+                [
+                    item.get("text_content", "")
+                    or item.get("enhanced_text", "")
+                    or item.get("text", "")
+                    for item in page_items
+                    if item.get("text_content")
+                    or item.get("enhanced_text")
+                    or item.get("text")
+                ]
+            )
+
+            if not consolidated_content.strip():
+                logger.warning(
+                    f"No text content found for {source_file}, page {page_id}"
+                )
+                continue
+
+            # Create a consolidated content item for questionnaire generation
+            consolidated_item = {
+                "text_content": consolidated_content,
+                "source_file": source_file,
+                "page_id": page_id,
+                "content_type": (
+                    page_items[0].get("content_type", "generic")
+                    if page_items
+                    else "generic"
+                ),
+            }
+
+            # Generate questionnaire for the consolidated content
+            qa_pairs = self.generate_questionnaire_for_content(consolidated_item)
+            all_qa_pairs.extend(qa_pairs)
+
+        return all_qa_pairs
+
     def generate_and_print_questionnaires(
         self, content_items: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:

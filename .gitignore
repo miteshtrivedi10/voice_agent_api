@@ -9,6 +9,7 @@ __pycache__/
 # Upload directory
 uploaded_files/
 upload/
+.vscode
 
 
 # Distribution / packaging
