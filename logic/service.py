@@ -43,22 +43,25 @@ from rag.rag.openrouter import OpenRouterClient
 # Global variable to track the last LLM call time
 last_llm_call_time = 0.0
 
+
 def vision_model_func(content_item, context=None):
     """Real vision model function using Sonoma-Dusk-Alpha via OpenRouter for educational content analysis."""
     global last_llm_call_time
-    
+
     # Rate limiting: Ensure at least 5 seconds between LLM calls
     current_time = time.time()
     time_since_last_call = current_time - last_llm_call_time
-    
+
     if time_since_last_call < 5.0:
         wait_time = 5.0 - time_since_last_call
-        logger.info(f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call")
+        logger.info(
+            f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call"
+        )
         time.sleep(wait_time)
-    
+
     # Update the last call time
     last_llm_call_time = time.time()
-    
+
     # Initialize OpenRouter client
     openrouter_client = OpenRouterClient()
 
@@ -213,7 +216,9 @@ def vision_model_func(content_item, context=None):
         logger.error(f"Vision model error for {source_info}, page {page_info}: {e}")
         # Check if the error is related to the OPENROUTER_MODEL setting
         if "OPENROUTER_MODEL" in str(e):
-            logger.error("OPENROUTER_MODEL setting not found. Please check your environment configuration.")
+            logger.error(
+                "OPENROUTER_MODEL setting not found. Please check your environment configuration."
+            )
         # Return None to indicate that no valid analysis could be generated
         # This will prevent the default question answer from being generated
         return None
@@ -222,19 +227,21 @@ def vision_model_func(content_item, context=None):
 def llm_model_func(content_item, context=None):
     """Real LLM model function using Sonoma-Dusk-Alpha via OpenRouter for educational content analysis."""
     global last_llm_call_time
-    
+
     # Rate limiting: Ensure at least 5 seconds between LLM calls
     current_time = time.time()
     time_since_last_call = current_time - last_llm_call_time
-    
+
     if time_since_last_call < 5.0:
         wait_time = 5.0 - time_since_last_call
-        logger.info(f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call")
+        logger.info(
+            f"Rate limiting: Waiting {wait_time:.2f} seconds before next LLM call"
+        )
         time.sleep(wait_time)
-    
+
     # Update the last call time
     last_llm_call_time = time.time()
-    
+
     # Initialize OpenRouter client
     openrouter_client = OpenRouterClient()
 
@@ -365,7 +372,7 @@ def get_rag_processor(user_name: Optional[str] = None):
         rag_processor = CustomRAGProcessor(
             vision_model_func=vision_model_func,
             llm_model_func=llm_model_func,
-            user_name=user_name
+            user_name=user_name,
         )
     return rag_processor
 
@@ -391,22 +398,40 @@ async def insert_file_details_async(
             )
 
             # Generate embeddings using RAG processor after successful insertion
-            absolute_filepath = f"{logic_settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
+            absolute_filepath = (
+                f"{logic_settings.UPLOAD_DIRECTORY}/{file_data.file_name}"
+            )
 
             # Get RAG processor instance with user_name
             processor = get_rag_processor(user_name=user_name)
 
             # Process file using RAG processor
-            content_list = processor.process_file(absolute_filepath)
+            content_list, questionnaire_data = processor.process_file(absolute_filepath)
 
-            # Generate questionnaires for the processed content
-            questionnaire_data = []
-            if hasattr(processor, "questionnaire_generator") and content_list:
-                for content_item in content_list:
-                    qa_pairs = processor.questionnaire_generator.generate_questionnaire_for_content(
-                        content_item
-                    )
-                    questionnaire_data.extend(qa_pairs)
+            # Debug: Print the structure of questionnaire_data
+            logger.debug(f"Questionnaire data type: {type(questionnaire_data)}")
+            logger.debug(f"Questionnaire data length: {len(questionnaire_data)}")
+            if questionnaire_data:
+                logger.debug(f"First item type: {type(questionnaire_data[0])}")
+                logger.debug(f"First item content: {str(questionnaire_data[0])[:200]}")
+
+            # Create question_and_answers list with proper error handling
+            question_and_answers = []
+            for i, qa in enumerate(questionnaire_data):
+                try:
+                    # Check if qa is a dict with the required keys
+                    if isinstance(qa, dict) and "question" in qa and "answer" in qa:
+                        question_and_answers.append(
+                            QuestionAnswerPair(
+                                question=qa["question"], answer=qa["answer"]
+                            )
+                        )
+                    else:
+                        logger.warning(
+                            f"Skipping invalid QA item at index {i}: type={type(qa)}, content={str(qa)[:100] if hasattr(qa, '__str__') else 'N/A'}"
+                        )
+                except Exception as e:
+                    logger.error(f"Error processing QA item at index {i}: {e}")
 
             embedding_response = GenerateEmbeddingResponse(
                 status="success",
@@ -415,10 +440,7 @@ async def insert_file_details_async(
                 file_id=file_data.file_id,
                 chunks_added=len(content_list),
                 total_generated_qna=len(questionnaire_data),
-                question_and_answers=[
-                    QuestionAnswerPair(question=qa["question"], answer=qa["answer"])
-                    for qa in questionnaire_data
-                ],
+                question_and_answers=question_and_answers,
             )
 
             if embedding_response and embedding_response.status == "success":
@@ -524,7 +546,9 @@ async def create_voice_session_service(
     room_name = f"{participant_name}_{uuid.uuid4().hex[:8]}"
 
     # Create room token
-    token = api.AccessToken(logic_settings.LIVEKIT_API_KEY, logic_settings.LIVEKIT_API_SECRET)
+    token = api.AccessToken(
+        logic_settings.LIVEKIT_API_KEY, logic_settings.LIVEKIT_API_SECRET
+    )
     token.with_identity(participant_name)
     token.with_name(participant_name)
     token.with_metadata(f"USERID={participant_name}")

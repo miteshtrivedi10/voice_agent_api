@@ -124,7 +124,7 @@ class RAGProcessor:
         for file_path in files:
             if file_path.suffix.lower() in ['.pdf', '.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
                 try:
-                    content_items = self.process_file(str(file_path))
+                    content_items, _ = self.process_file(str(file_path))
                     results[str(file_path)] = content_items
                     logger.info(f"Processed {file_path.name}: {len(content_items)} content items")
                 except FileProcessingError as e:
@@ -162,11 +162,13 @@ class RAGProcessor:
             if processed_content:
                 self._store_content_batch(processed_content)
                 
-                # Generate and print questionnaires for each processed content item
-                self.questionnaire_generator.generate_and_print_questionnaires(processed_content)
+                # Generate questionnaires for each processed content item (without printing)
+                questionnaire_data = self.questionnaire_generator.generate_questionnaires(processed_content)
+            else:
+                questionnaire_data = []
             
             logger.info(f"Processed {len(processed_content)} content items from {file_path}")
-            return processed_content
+            return processed_content, questionnaire_data
 
     def _process_content_item(self, content_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Process a single content item through the appropriate pipeline."""

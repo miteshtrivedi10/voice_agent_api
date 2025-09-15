@@ -266,7 +266,7 @@ class CustomRAGProcessor(RAGProcessor):
             # Return a zero vector as fallback
             return np.zeros(768, dtype=np.float32)
     
-    def process_file(self, file_path: str) -> List[Dict[str, Any]]:
+    def process_file(self, file_path: str):
         """
         Enhanced process_file method that ensures high-quality content extraction
         for better questionnaire generation.
@@ -274,7 +274,7 @@ class CustomRAGProcessor(RAGProcessor):
         logger.info(f"Processing file with enhanced content extraction: {file_path}")
         
         # Call parent method for basic processing
-        content_list = super().process_file(file_path)
+        content_list, questionnaire_data, _ = super().process_file(file_path)
         
         # Enhance the content list with additional metadata for questionnaires
         enhanced_content_list = []
@@ -285,7 +285,9 @@ class CustomRAGProcessor(RAGProcessor):
                 enhanced_content_list.append(enhanced_item)
         
         logger.info(f"Processed {len(enhanced_content_list)} content items with enhanced context")
-        return enhanced_content_list
+        
+        # Return the content list and questionnaire data
+        return enhanced_content_list, questionnaire_data
     
     def _add_questionnaire_context(self, content_item: Dict[str, Any]) -> Dict[str, Any]:
         """Add context that helps with questionnaire generation."""
