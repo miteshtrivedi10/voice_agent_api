@@ -87,15 +87,49 @@ Returns user profile information:
 
 See `oauth_setup_guide.md` for detailed instructions on setting up OAuth providers.
 
+## Applying Migrations
+
+### Method 1: Using Supabase Dashboard (Recommended)
+1. Go to your Supabase project dashboard
+2. Navigate to the SQL Editor
+3. Copy and paste the contents of the migration files in order:
+   - `migrations/20250915000000_create_file_details_table.sql`
+   - `migrations/20250915000001_create_question_and_answers_table.sql`
+   - `migrations/20250915000002_setup_security.sql`
+   - `migrations/20250915000003_add_processed_timestamp_trigger.sql`
+   - `migrations/20250915000004_setup_oauth_and_auth.sql`
+   - `migrations/20250915000005_add_file_alias_column.sql`
+4. Run each script individually
+
+### Method 2: Using the provided scripts
+1. Make sure you have psql installed
+2. Set the DATABASE_URL environment variable:
+   ```bash
+   export DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@YOUR_PROJECT_ID.supabase.co:5432/postgres"
+   ```
+3. Run the setup script:
+   ```bash
+   ./supabase/setup_database.sh
+   ```
+
+### Method 3: Manual SQL Execution
+You can also run the individual SQL files directly:
+```bash
+# Apply the file_alias migration
+psql $DATABASE_URL -f supabase_file_alias_migration.sql
+```
+
+## Verifying Migrations
+
+To verify that the migrations were applied successfully, you can run:
+```bash
+python verify_file_alias_column.py
+```
+
 ## Setup Instructions
 
 1. Create a new Supabase project
-2. Run the migration scripts in order:
-   - `20250915000000_create_file_details_table.sql`
-   - `20250915000001_create_question_and_answers_table.sql`
-   - `20250915000002_setup_security.sql`
-   - `20250915000003_add_processed_timestamp_trigger.sql`
-   - `20250915000004_setup_oauth_and_auth.sql`
+2. Run the migration scripts in order (as described above)
 3. Deploy custom functions:
    - `functions/get_user_file_stats.sql`
    - `functions/get_recent_qna.sql`
